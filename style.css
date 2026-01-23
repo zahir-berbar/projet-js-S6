@@ -1,0 +1,84 @@
+body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: #f1f5f9; /* gris clair doux */
+    color: #1e293b; /* texte lisible */
+}
+
+/* Titre */
+.title{
+    text-align: center;
+    margin-bottom: 20px;
+    padding: 12px 26px;
+    border-radius: 14px;
+    background-color: #e0e7ff; /* bleu pastel */
+    color: #1e3a8a;
+    font-weight: bold;
+}
+
+/* Carte principale */
+.box{
+    width: min(520px, 92vw);
+    border-radius: 18px;
+    padding: 22px;
+    background-color: #ffffff; /* blanc cassé */
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* Zone d'affichage du mot */
+.display-area{
+    background-color: #f0fdf4; /* vert très clair */
+    border-radius: 14px;
+    padding: 20px;
+    margin-bottom: 16px;
+    text-align: center;
+    border: 1px solid #bbf7d0;
+}
+
+/* Mot à trouver */
+#text-to-find{
+    margin: 0;
+    font-size: 34px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #065f46;
+}
+
+/* Zone input */
+.text-to-enter{
+    text-align: center;
+}
+
+/* Champ de saisie */
+#input-text{
+    width: min(260px, 90%);
+    font-size: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 2px solid #c7d2fe;
+    outline: none;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Focus input */
+#input-text:focus{
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+/* Score */
+#score{
+    display: inline-block;
+    background-color: #ecfeff; /* bleu-vert très clair */
+    color: #155e75;
+    font-weight: bold;
+    border-radius: 999px;
+    padding: 10px 18px;
+    margin-bottom: 16px;
+    border: 1px solid #67e8f9;
+}
