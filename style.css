@@ -114,3 +114,14 @@ width: fit-content;
   font-weight: 700;
   cursor: pointer;
 }
+
+.tabMot{
+  display: flex;
+}
+
+.tabMot p{
+  width: 100px;
+  position: relative;
+  top: 0px;
+  font-size: 34px;
+}
