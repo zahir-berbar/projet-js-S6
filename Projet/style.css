@@ -1,0 +1,182 @@
+body{
+    font-family: Arial, sans-serif;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+    background-color: #f1f5f9;
+    color: #1e293b;
+}
+
+/* Titre */
+#title{
+    text-align: center;
+    margin: 0 0 18px;
+    padding: 12px 26px;
+    border-radius: 14px;
+    color: #1e3a8a;
+    font-weight: 700;
+}
+
+/* Carte principale */
+#box{
+    display: flex;
+    flex-direction: column;
+    align-items: center;   
+    justify-content: center;
+    border-radius: 18px;
+    padding: 22px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+/* Details (score à gauche, niveau à droite) */
+.details{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    width: 100%;
+    max-width: 544px;
+}
+
+/* Badges score + niveau + vies */
+#score, #niveau, #vies{
+    display: inline-block;
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 10px 16px;
+    border: 1px solid #67e8f9;
+    background-color: #ecfeff;
+    color: #155e75;
+    width: fit-content;
+    margin: 0;
+}
+
+/* Badge vies (style spécifique) */
+#vies{
+    border: 1px solid #fca5a5;
+    background-color: #fee2e2;
+    color: #991b1b;
+}
+
+/* Zone d'affichage du mot */
+#display-area{
+    width: 500px;
+    height: 600px;  
+    background-color: #f0fdf4;
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 16px;
+    border: 1px solid #bbf7d0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Container des mots */
+.tabMot{
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+/* Style pour chaque mot */
+.falling-word{
+    position: absolute;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #065f46;
+    transition: top 0.05s linear;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/* Animation de pulsation pour le mot à taper */
+.falling-word.active{
+    animation: pulse 1.5s ease-in-out infinite;
+    color: #92400e;
+    text-shadow: 0 2px 8px rgba(251, 191, 36, 0.5);
+}
+
+@keyframes pulse {
+    0%, 100% {
+        transform: translateX(-50%) scale(1);
+    }
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+}
+
+/* Mot raté (arrivé en bas) */
+.falling-word.missed{
+    color: #991b1b;
+    text-decoration: line-through;
+}
+
+/* Zone input */
+.text-to-enter{
+    text-align: center;
+}
+
+.text-to-enter h2{
+    margin: 0 0 10px;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Champ de saisie */
+#input-text{
+    width: min(320px, 100%);
+    font-size: 18px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 2px solid #c7d2fe;
+    outline: none;
+    background: #fff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+#input-text:focus{
+    border-color: #6366f1;
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+}
+
+/* Animation pour input correct */
+#input-text.correct{
+    border-color: #10b981;
+    background-color: #d1fae5;
+}
+
+/* Animation pour input incorrect */
+#input-text.incorrect{
+    border-color: #ef4444;
+    animation: shake 0.3s;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+}
+
+#acceuil{
+    display: inline-block;
+    margin-bottom: 16px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 2px solid #c7d2fe;
+    background: #e0e7ff;
+    color: #1e3a8a;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+#acceuil:hover{
+    background: #c7d2fe;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(99, 102, 241, 0.2);
+}
