@@ -1,20 +1,3 @@
-const words = [
-    "chat",
-    "chien",
-    "soleil",
-    "ordinateur",
-    "clavier"
-]
-let index = 0
-let scoreValue=0
-const vitesse=5
-let interval
-
-
-//afficher le premier mot
-
-const textToFind = document.getElementById("text-to-find")
-textToFind.innerText = words[index]
 
 
 const demarrerTimer = function () {
@@ -43,7 +26,32 @@ const compare = function() {
     }
 }
 
+const words = [
+    "chat",
+    "chien",
+    "soleil",
+    "ordinateur",
+    "clavier"
+]
+let index = 0
+let scoreValue=0
+let interval
 
+//recuperer la difficulté dans l'url
+const params = window.location.search.split("?")[1].split("=")
+
+vitesse=parseInt(params[1]) || 4
+
+const niveau=document.getElementById("niveau")
+niveau.innerText=params[0]
+console.log(niveau.value)
+
+
+
+//afficher le premier mot
+
+const textToFind = document.getElementById("text-to-find")
+textToFind.innerText = words[index]
 
 demarrerTimer()
 const textToEnter = document.getElementById("input-text")
