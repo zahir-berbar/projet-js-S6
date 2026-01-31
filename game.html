@@ -1,41 +1,37 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="style.css">
-  <script defer src="script.js"></script>
-  <title>Typing Game</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <script defer src="script.js"></script>
+    <title>Typing Game</title>
 </head>
 
 <body>
-  <a href="index.html"><button id="acceuil">Acceuil</button></a>
-  <h1 id="title">Venez jouer!</h1>
-
-  <div class="details">
-    <p id="score">Score: 0</p>
-    <p id="niveau"></p>
-  </div>
-
-  <div id="box">
-    <div id="display-area">
-      <div class="tabMot">
-        <div><p id="tM0"></p></div>
-        <div><p id="tM1"></p></div>
-        <div><p id="tM2"></p></div>
-        <div><p id="tM3"></p></div>
-        <div><p id="tM4"></p></div>
-      </div>
-      
+    <h1 id="title">Venez jouer!</h1>
+    <div class="layout-grid">
+        <div class="top-bar">
+            <a href="index.html"><button id="acceuil">Accueil</button></a>
+            <button id="replay" type="button">Rejouer</button>
+        </div>
+        <div class="details">
+            <p id="score">Score: 0</p>
+            <p id="niveau"></p>
+        </div>
+        <div class="highscores" id="highscores"></div>
+        <div id="box">
+            <div id="display-area">
+                <div class="tabMot" id="tabMot">
+                </div>
+            </div>
+            <div class="text-to-enter">
+                <h2>Tapez le mot le plus vite possible :</h2>
+                <input type="text" id="input-text" autocomplete="off" />
+            </div>
+        </div>
     </div>
-
-    <div class="text-to-enter">
-      <h2>Tapez le mot le plus vite possible :</h2>
-      <input type="text" id="input-text" autocomplete="off" />
-    </div>
-  </div>
-
-
-
 </body>
+
 </html>
