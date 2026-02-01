@@ -30,7 +30,7 @@ body{
     color: var(--text);
 }
 
-.layout-grid{
+.grille-page{
     display: grid;
     grid-template-columns: minmax(260px, 320px) minmax(520px, 740px);
     grid-template-rows: auto 1fr;
@@ -44,7 +44,7 @@ body{
 }
 
 /* Titre */
-#title{
+#titre-jeu{
     text-align: center;
     margin: 6px 0 8px;
     padding: 12px 30px;
@@ -58,7 +58,7 @@ body{
 }
 
 /* Carte principale */
-#box{
+#panneau-jeu{
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -75,7 +75,7 @@ body{
 }
 
 /* Details (score à gauche, niveau à droite) */
-.details{
+.infos-partie{
     display: flex;
     justify-content: center;
     align-items: center;
@@ -92,7 +92,7 @@ body{
     grid-row: 1;
 }
 
-.top-bar{
+.barre-haut{
     grid-column: 1;
     grid-row: 1;
     display: flex;
@@ -100,7 +100,7 @@ body{
     align-items: center;
 }
 
-.highscores{
+.bloc-palmares{
     background: rgba(255, 255, 255, 0.9);
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -112,7 +112,7 @@ body{
     grid-row: 2;
 }
 
-.highscores-header{
+.entete-palmares{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -122,7 +122,7 @@ body{
     letter-spacing: 0.3px;
 }
 
-.highscores-list{
+.liste-palmares{
     list-style: none;
     padding: 0;
     margin: 0;
@@ -130,14 +130,14 @@ body{
     gap: 6px;
 }
 
-.highscores-empty{
+.palmares-vide{
     margin: 0;
     text-align: center;
     color: var(--muted);
     padding: 8px 0 4px;
 }
 
-.highscore-item{
+.item-palmares{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -149,13 +149,13 @@ body{
     font-weight: 600;
 }
 
-.highscore-item span{
+.item-palmares span{
     color: var(--muted);
     font-size: 0.95rem;
 }
 
 /* Badges score + niveau + vies */
-#score, #niveau, #vies{
+#compteur-score, #badge-niveau, #badge-vies{
     display: inline-flex;
     align-items: center;
     gap: 6px;
@@ -172,14 +172,14 @@ body{
 }
 
 /* Badge vies (style spécifique) */
-#vies{
+#badge-vies{
     border: 1px solid #f9d9d6;
     background-color: #fff3f2;
     color: var(--danger);
 }
 
 /* Zone d'affichage du mot */
-#display-area{
+#zone-chute{
     width: 100%;
     max-width: 680px;
     height: clamp(420px, 60vh, 620px);
@@ -196,7 +196,7 @@ body{
 }
 
 /* Container des mots */
-.tabMot{
+.pile-mots{
     width: 100%;
     height: 100%;
     position: relative;
@@ -238,7 +238,7 @@ body{
 }
 
 /* Zone input */
-.text-to-enter{
+.zone-saisie{
     text-align: center;
     display: flex;
     flex-direction: column;
@@ -246,7 +246,7 @@ body{
     width: min(480px, 100%);
 }
 
-.text-to-enter h2{
+.zone-saisie h2{
     margin: 0;
     font-size: 18px;
     font-weight: 700;
@@ -254,7 +254,7 @@ body{
 }
 
 /* Champ de saisie */
-#input-text{
+#champ-texte{
     width: 100%;
     font-size: 18px;
     padding: 13px 14px;
@@ -265,20 +265,20 @@ body{
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
 }
 
-#input-text:focus{
+#champ-texte:focus{
     border-color: var(--primary);
     box-shadow: 0 0 0 4px rgba(15, 107, 164, 0.16);
     transform: translateY(-1px);
 }
 
 /* Animation pour input correct */
-#input-text.correct{
+#champ-texte.correct{
     border-color: var(--success);
     background-color: #e9f8ef;
 }
 
 /* Animation pour input incorrect */
-#input-text.incorrect{
+#champ-texte.incorrect{
     border-color: var(--danger);
     animation: shake 0.3s;
 }
@@ -289,7 +289,7 @@ body{
     75% { transform: translateX(10px); }
 }
 
-#acceuil{
+#bouton-accueil{
     display: inline-block;
     margin: 4px 0 10px;
     padding: 11px 18px;
@@ -303,12 +303,12 @@ body{
     box-shadow: 0 12px 22px rgba(15, 107, 164, 0.25);
 }
 
-#acceuil:hover{
+#bouton-accueil:hover{
     transform: translateY(-1px);
     box-shadow: 0 14px 26px rgba(15, 107, 164, 0.30);
 }
 
-#replay{
+#bouton-rejouer{
     padding: 10px 16px;
     border-radius: 12px;
     border: 2px solid transparent;
@@ -320,31 +320,31 @@ body{
     box-shadow: 0 10px 18px rgba(14,165,233,0.2);
 }
 
-#replay:hover{
+#bouton-rejouer:hover{
     transform: translateY(-1px);
     box-shadow: 0 12px 22px rgba(14,165,233,0.28);
 }
 
 @media (max-width: 780px){
-    #display-area{
+    #zone-chute{
         height: clamp(360px, 52vh, 520px);
     }
-    #box{
+    #panneau-jeu{
         padding: 22px 18px 26px;
     }
-    .layout-grid{
+    .grille-page{
         grid-template-columns: 1fr;
         grid-template-rows: repeat(4, auto);
         width: 100%;
         padding: 0 12px;
     }
-    .top-bar,
-    .details,
-    .highscores,
-    #box{
+    .barre-haut,
+    .infos-partie,
+    .bloc-palmares,
+    #panneau-jeu{
         grid-column: 1;
     }
-    .highscores{
+    .bloc-palmares{
         width: 100%;
     }
 }
@@ -356,7 +356,7 @@ body{
     .falling-word{
         font-size: 28px;
     }
-    .details{
+    .infos-partie{
         padding: 10px 12px;
     }
 }

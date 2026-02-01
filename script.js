@@ -1,4 +1,4 @@
-const allWords = [
+const listeMots = [
     "chat", "chien", "soleil", "ordinateur", "clavier",
     "maison", "jardin", "voiture", "musique", "livre",
     "table", "chaise", "fenêtre", "porte", "lumière",
@@ -22,371 +22,342 @@ const allWords = [
     "extraordinaire", "magnifique", "spectaculaire", "incroyable", "fantastique",
     "communication", "collaboration", "coordination", "organisation", "planification"
 ];
-// Pools par taille de mot
-const smallWords = allWords.filter(w => w.length <= 5);
-const mediumWords = allWords.filter(w => w.length >= 6 && w.length <= 8);
-const largeWords = allWords.filter(w => w.length >= 9);
 
-// Récupérer la difficulté dans l'url
-const params = window.location.search.split("?")[1]?.split("=") || ["Facile", "0"];
-const difficulte = parseInt(params[1]) || 0;
+const motsCourts = listeMots.filter(mot => mot.length <= 5);
+const motsMoyens = listeMots.filter(mot => mot.length >= 6 && mot.length <= 8);
+const motsLongs = listeMots.filter(mot => mot.length >= 9);
 
-// Tableau des difficultés - TEMPS AUGMENTÉ
-const vitesseDefilement = [50, 35, 25]; // Vitesse réduite
-const delaiApparition = [4000, 3000, 2000]; // Plus de temps entre les mots (4s, 3s, 2s)
+const parametresUrl = window.location.search.split("?")[1]?.split("=") || ["Facile", "0"];
+const niveauSelectionne = parseInt(parametresUrl[1]) || 0;
 
+const vitesseChute = [50, 35, 25];
+const delaiEntreMots = [4000, 3000, 2000];
 
-
-function getPoolByDifficulty(){
-    const pool = difficulte === 0 ? smallWords : (difficulte === 1 ? mediumWords : largeWords);
-    return pool.length ? pool : allWords;
+function choisirListeSelonNiveau() {
+    const selection = niveauSelectionne === 0 ? motsCourts : (niveauSelectionne === 1 ? motsMoyens : motsLongs);
+    return selection.length ? selection : listeMots;
 }
 
-// Afficher le niveau
-const niveau = document.getElementById("niveau");
-const niveauTexte = ["Facile", "Moyen", "Difficile"];
-niveau.innerText = niveauTexte[difficulte] || params[0] || "Facile";
+const badgeNiveau = document.getElementById("badge-niveau");
+const libellesNiveaux = ["Facile", "Moyen", "Difficile"];
+badgeNiveau.innerText = libellesNiveaux[niveauSelectionne] || parametresUrl[0] || "Facile";
 
-// Variables de jeu
-let scoreValue = 0;
-let viesValue = 3; // 3 vies
-let activeWords = [];
-let nextWordTimeout;
-let wordIdCounter = 0;
-let inputListenerAttached = false;
-const HEART = "\u2764\uFE0F";
+let pointsActuels = 0;
+let viesRestantes = 3;
+let motsAffiches = [];
+let temporisateurNouveauMot;
+let compteurMots = 0;
+let ecouteurSaisieLie = false;
+const SYMBOLE_COEUR = "\u2764\uFE0F";
 
-const displayArea = document.getElementById("display-area");
-const tabMot = document.getElementById("tabMot");
-const textToEnter = document.getElementById("input-text");
-const scoreElement = document.getElementById("score");
-const highScoresContainer = document.getElementById("highscores");
-const BEST_SCORES_KEY = "typingGameBestScores";
+const zoneChute = document.getElementById("zone-chute");
+const pileMots = document.getElementById("pile-mots");
+const champTexte = document.getElementById("champ-texte");
+const indicateurScore = document.getElementById("compteur-score");
 
-// Créer l'affichage des vies
-const viesElement = document.createElement('p');
-viesElement.id = 'vies';
-viesElement.innerText = `${HEART} Vies: ${viesValue}`;
-document.querySelector('.details').appendChild(viesElement);
-const replayBtn = document.getElementById("replay");
+const conteneurPalmares = document.getElementById("palmares");
 
-function loadBestScores(){
-    try{
-        const stored = localStorage.getItem(BEST_SCORES_KEY);
-        return stored ? JSON.parse(stored) : [];
-    }catch(e){
+const CLE_PALMARES = "palmaresClavierMaison";
+
+const afficheurVies = document.createElement('p');
+afficheurVies.id = 'badge-vies';
+afficheurVies.innerText = `${SYMBOLE_COEUR} Vies: ${viesRestantes}`;
+document.querySelector('.infos-partie').appendChild(afficheurVies);
+const boutonRejouer = document.getElementById("bouton-rejouer");
+
+//recuperer l'historique des scores depuis le localStorage
+
+function chargerPalmares() {
+    try {
+        const sauvegarde = localStorage.getItem(CLE_PALMARES);
+        return sauvegarde ? JSON.parse(sauvegarde) : [];
+    } catch (e) {
         return [];
     }
 }
 
-function saveBestScores(list){
-    try{
-        localStorage.setItem(BEST_SCORES_KEY, JSON.stringify(list));
-    }catch(e){
-        // localStorage peut être désactivé
-    }
-}
+// afficher l'historique des scores 
+function afficherPalmares(liste) {
+    if (!conteneurPalmares) return;
 
-function recordBestScore(score, niveauLabel){
-    const scores = loadBestScores();
-    scores.push({
-        score: score,
-        niveau: niveauLabel,
-        date: new Date().toISOString()
-    });
-    scores.sort((a,b) => b.score - a.score);
-    const topFive = scores.slice(0,5);
-    saveBestScores(topFive);
-    return topFive;
-}
-
-function renderBestScores(list){
-    if(!highScoresContainer) return;
-
-    if(!list.length){
-        highScoresContainer.innerHTML = `
-            <div class="highscores-header">
+    if (!liste.length) {
+        conteneurPalmares.innerHTML = `
+            <div class="entete-palmares">
                 <span>Meilleurs scores</span>
             </div>
-            <p class="highscores-empty">Aucun score enregistré pour l'instant.</p>
+            <p class="palmares-vide">Aucun score enregistré pour l'instant.</p>
         `;
         return;
     }
 
-    const items = list.map((entry, index) => {
-        const date = new Date(entry.date).toLocaleDateString('fr-FR');
+    const items = liste.map((entree, index) => {
+        const date = new Date(entree.date).toLocaleDateString('fr-FR');
         return `
-            <li class="highscore-item">
-                <strong>${index + 1}. ${entry.score} pts</strong>
-                <span>${entry.niveau} · ${date}</span>
+            <li class="item-palmares">
+                <strong>${index + 1}. ${entree.score} pts</strong>
+                <span>${entree.niveau} · ${date}</span>
             </li>
         `;
     }).join("");
 
-    highScoresContainer.innerHTML = `
-        <div class="highscores-header">
+    conteneurPalmares.innerHTML = `
+        <div class="entete-palmares">
             <span>Meilleurs scores</span>
             <span>Top 5</span>
         </div>
-        <ol class="highscores-list">
+        <ol class="liste-palmares">
             ${items}
         </ol>
     `;
 }
 
-// Fonction pour générer une position horizontale aléatoire
-function getRandomHorizontalPosition() {
+function enregistrerPalmares(liste) {
+    try {
+        localStorage.setItem(CLE_PALMARES, JSON.stringify(liste));
+    } catch (e) {
+        // localStorage désactivé ou plein
+    }
+}
+
+function mettreAJourPalmares(score, niveauLabel) {
+    const scores = chargerPalmares();
+    scores.push({
+        score: score,
+        niveau: niveauLabel,
+        date: new Date().toISOString()
+    });
+    scores.sort((a, b) => b.score - a.score);
+    const meilleurs = scores.slice(0, 5);
+    enregistrerPalmares(meilleurs);
+    return meilleurs;
+}
+
+
+
+function genererPositionHorizontale() {
     const minPercent = 10;
     const maxPercent = 90;
     return Math.floor(Math.random() * (maxPercent - minPercent) + minPercent);
 }
 
-// Créer un nouveau mot
-function createWord(text, id) {
-    const wordDiv = document.createElement('div');
-    wordDiv.className = 'falling-word';
-    wordDiv.textContent = text;
-    wordDiv.id = `word-${id}`;
-    wordDiv.style.top = '-50px';
-    wordDiv.style.left = `${getRandomHorizontalPosition()}%`;
-    tabMot.appendChild(wordDiv);
-    
+function creerBulleMot(texte, id) {
+    const blocMot = document.createElement('div');
+    blocMot.className = 'falling-word';
+    blocMot.textContent = texte;
+    blocMot.id = `mot-${id}`;
+    blocMot.style.top = '-50px';
+    blocMot.style.left = `${genererPositionHorizontale()}%`;
+    pileMots.appendChild(blocMot);
+
     return {
         id: id,
-        text: text,
-        element: wordDiv,
+        texte: texte,
+        element: blocMot,
         position: -50,
-        interval: null,
-        maxHeight: displayArea.clientHeight - 80
+        intervalle: null,
+        hauteurLimite: zoneChute.clientHeight - 80
     };
 }
 
-// Démarrer la chute d'un mot
-function startFalling(word) {
-    word.interval = setInterval(() => {
-        word.position += 2;
-        word.element.style.top = `${word.position}px`;
+function declencherChute(mot) {
+    mot.intervalle = setInterval(() => {
+        mot.position += 2;
+        mot.element.style.top = `${mot.position}px`;
 
-        if (word.position >= word.maxHeight) {
-            wordMissed(word);
+        if (mot.position >= mot.hauteurLimite) {
+            motManque(mot);
         }
-    }, vitesseDefilement[difficulte]);
+    }, vitesseChute[niveauSelectionne]);
 }
 
-// Mot raté (arrive en bas)
-function wordMissed(word) {
-    word.element.classList.add('missed');
-    stopWord(word);
-    
-    // Perdre une vie
-    viesValue--;
-    viesElement.innerText = `${HEART} Vies: ${viesValue}`;
-    
-    // Vérifier si le jeu est terminé
-    if (viesValue <= 0) {
-        gameOver();
+function motManque(mot) {
+    mot.element.classList.add('missed');
+    interrompreChute(mot);
+
+    viesRestantes--;
+    afficheurVies.innerText = `${SYMBOLE_COEUR} Vies: ${viesRestantes}`;
+
+    if (viesRestantes <= 0) {
+        finirPartie();
     }
-    
+
     setTimeout(() => {
-        removeWord(word);
+        retirerMot(mot);
     }, 500);
 }
 
-// Mot réussi
-function wordMatched(word) {
-    stopWord(word);
-    word.element.style.transition = 'all 0.3s ease';
-    word.element.style.transform = 'translateX(-50%) scale(1.5)';
-    word.element.style.opacity = '0';
-    
-    // +1 point par mot
-    scoreValue += 1;
-    scoreElement.innerText = `Score: ${scoreValue}`;
-    
+function motAttrape(mot) {
+    interrompreChute(mot);
+    mot.element.style.transition = 'all 0.3s ease';
+    mot.element.style.transform = 'translateX(-50%) scale(1.5)';
+    mot.element.style.opacity = '0';
+
+    pointsActuels += 1;
+    indicateurScore.innerText = `Score: ${pointsActuels}`;
+
     setTimeout(() => {
-        removeWord(word);
+        retirerMot(mot);
     }, 300);
 }
 
-// Arrêter la chute d'un mot
-function stopWord(word) {
-    if (word.interval) {
-        clearInterval(word.interval);
-        word.interval = null;
+function interrompreChute(mot) {
+    if (mot.intervalle) {
+        clearInterval(mot.intervalle);
+        mot.intervalle = null;
     }
 }
 
-// Supprimer un mot
-function removeWord(word) {
-    if (word.element && word.element.parentNode) {
-        word.element.parentNode.removeChild(word.element);
+function retirerMot(mot) {
+    if (mot.element && mot.element.parentNode) {
+        mot.element.parentNode.removeChild(mot.element);
     }
-    activeWords = activeWords.filter(w => w.id !== word.id);
-    updateActiveWord();
+    motsAffiches = motsAffiches.filter(item => item.id !== mot.id);
+    mettreEnAvantMotActif();
 }
 
-// Mettre à jour le mot actif (premier dans la liste)
-function updateActiveWord() {
-    // Retirer la classe active de tous les mots
-    activeWords.forEach(w => w.element.classList.remove('active'));
-    
-    // Ajouter la classe active au premier mot
-    if (activeWords.length > 0) {
-        activeWords[0].element.classList.add('active');
+function mettreEnAvantMotActif() {
+    motsAffiches.forEach(item => item.element.classList.remove('active'));
+
+    if (motsAffiches.length > 0) {
+        motsAffiches[0].element.classList.add('active');
     }
 }
 
-// Fonction pour ajouter un nouveau mot
+function injecterNouveauMot() {
+    if (viesRestantes <= 0) return;
 
-function addNewWord() {
-    // Ne pas ajouter de nouveaux mots si le jeu est terminé
-    if (viesValue <= 0) return;
-    
-    const pool = getPoolByDifficulty();
-    const randomWord = pool[Math.floor(Math.random() * pool.length)];
-    const newWord = createWord(randomWord, wordIdCounter++);
-    activeWords.push(newWord);
-    startFalling(newWord);
+    const listeSelonNiveau = choisirListeSelonNiveau();
+    const motChoisi = listeSelonNiveau[Math.floor(Math.random() * listeSelonNiveau.length)];
+    const nouveauMot = creerBulleMot(motChoisi, compteurMots++);
+    motsAffiches.push(nouveauMot);
+    declencherChute(nouveauMot);
 
-    if (activeWords.length === 1) {
-        newWord.element.classList.add('active');
+    if (motsAffiches.length === 1) {
+        nouveauMot.element.classList.add('active');
     }
 
-    nextWordTimeout = setTimeout(addNewWord, delaiApparition[difficulte]);
+    temporisateurNouveauMot = setTimeout(injecterNouveauMot, delaiEntreMots[niveauSelectionne]);
 }
 
-// Fonction de validation (appelée uniquement avec Entrée)
-function validateInput() {
-    const inputValue = textToEnter.value.trim();
-    
-    if (inputValue === '' || activeWords.length === 0) {
-        textToEnter.value = '';
+function validerSaisie() {
+    const saisie = champTexte.value.trim();
+
+    if (saisie === '' || motsAffiches.length === 0) {
+        champTexte.value = '';
         return;
     }
 
-    // Chercher si le mot tapé correspond à un mot à l'écran
-    const matchedWord = activeWords.find(word => word.text === inputValue);
-    
-    if (matchedWord) {
-        // Mot correct !
-        textToEnter.classList.add('correct');
+    const motIdentique = motsAffiches.find(item => item.texte === saisie);
+
+    if (motIdentique) {
+        champTexte.classList.add('correct');
         setTimeout(() => {
-            textToEnter.classList.remove('correct');
+            champTexte.classList.remove('correct');
         }, 300);
-        
-        wordMatched(matchedWord);
-        textToEnter.value = '';
+
+        motAttrape(motIdentique);
+        champTexte.value = '';
     } else {
-        // Mot incorrect - vider la case avec animation
-        textToEnter.classList.add('incorrect');
+        champTexte.classList.add('incorrect');
         setTimeout(() => {
-            textToEnter.classList.remove('incorrect');
-            textToEnter.value = '';
+            champTexte.classList.remove('incorrect');
+            champTexte.value = '';
         }, 300);
     }
 }
 
-// Vérification en temps réel pour feedback visuel (sans validation)
-function checkInput() {
-    const inputValue = textToEnter.value.trim();
+function surveillerSaisie() {
+    const saisie = champTexte.value.trim();
 
-    if (inputValue === '') {
-        textToEnter.style.borderColor = '#c7d2fe';
+    if (saisie === '') {
+        champTexte.style.borderColor = '#c7d2fe';
         return;
     }
 
-    // Cherche un mot EXACTEMENT égal à ce qui est tapé
-    const matchedWord = activeWords.find(word => word.text === inputValue);
+    const motIdentique = motsAffiches.find(item => item.texte === saisie);
 
-    if (matchedWord) {
-        // Validation automatique
-        textToEnter.classList.add('correct');
+    if (motIdentique) {
+        champTexte.classList.add('correct');
         setTimeout(() => {
-            textToEnter.classList.remove('correct');
+            champTexte.classList.remove('correct');
         }, 200);
 
-        wordMatched(matchedWord);
-        textToEnter.value = '';
-        textToEnter.style.borderColor = '#c7d2fe';
+        motAttrape(motIdentique);
+        champTexte.value = '';
+        champTexte.style.borderColor = '#c7d2fe';
         return;
     }
 
-    // Feedback visuel pendant la frappe
-    const hasPrefix = activeWords.some(word =>
-        word.text.startsWith(inputValue)
+    const debuteComme = motsAffiches.some(item =>
+        item.texte.startsWith(saisie)
     );
 
-    if (!hasPrefix) {
-        textToEnter.style.borderColor = '#fca5a5'; // rouge
+    if (!debuteComme) {
+        champTexte.style.borderColor = '#fca5a5';
     } else {
-        textToEnter.style.borderColor = '#86efac'; // vert
+        champTexte.style.borderColor = '#86efac';
     }
 }
 
-// Game Over
-function gameOver() {
-    // Arrêter tous les intervalles
-    activeWords.forEach(word => stopWord(word));
-    clearTimeout(nextWordTimeout);
-    
-    const updatedScores = recordBestScore(scoreValue, niveau.innerText);
-    renderBestScores(updatedScores);
-    
-    // Désactiver l'input
-    textToEnter.disabled = true;
-    textToEnter.value = `GAME OVER - Score: ${scoreValue}`;
-    textToEnter.style.backgroundColor = '#fee2e2';
-    textToEnter.style.color = '#991b1b';
-    textToEnter.style.fontWeight = 'bold';
-    textToEnter.style.textAlign = 'center';
+function finirPartie() {
+    motsAffiches.forEach(mot => interrompreChute(mot));
+    clearTimeout(temporisateurNouveauMot);
+
+    const scoresMisAJour = mettreAJourPalmares(pointsActuels, badgeNiveau.innerText);
+    afficherPalmares(scoresMisAJour);
+
+    champTexte.disabled = true;
+    champTexte.value = `GAME OVER - Score: ${pointsActuels}`;
+    champTexte.style.backgroundColor = '#fee2e2';
+    champTexte.style.color = '#991b1b';
+    champTexte.style.fontWeight = 'bold';
+    champTexte.style.textAlign = 'center';
 }
 
-function resetGame(){
-    activeWords.forEach(stopWord);
-    clearTimeout(nextWordTimeout);
-    nextWordTimeout = null;
-    tabMot.innerHTML = '';
-    activeWords = [];
-    wordIdCounter = 0;
+function remettreAZeroPartie() {
+    motsAffiches.forEach(interrompreChute);
+    clearTimeout(temporisateurNouveauMot);
+    temporisateurNouveauMot = null;
+    pileMots.innerHTML = '';
+    motsAffiches = [];
+    compteurMots = 0;
 
-    scoreValue = 0;
-    viesValue = 3;
-    scoreElement.innerText = `Score: ${scoreValue}`;
-    viesElement.innerText = `${HEART} Vies: ${viesValue}`;
+    pointsActuels = 0;
+    viesRestantes = 3;
+    indicateurScore.innerText = `Score: ${pointsActuels}`;
+    afficheurVies.innerText = `${SYMBOLE_COEUR} Vies: ${viesRestantes}`;
 
-    textToEnter.disabled = false;
-    textToEnter.value = '';
-    textToEnter.classList.remove('correct','incorrect');
-    textToEnter.style.backgroundColor = '';
-    textToEnter.style.color = '';
-    textToEnter.style.fontWeight = '';
-    textToEnter.style.textAlign = '';
-    textToEnter.style.borderColor = '#c7d2fe';
+    champTexte.disabled = false;
+    champTexte.value = '';
+    champTexte.classList.remove('correct', 'incorrect');
+    champTexte.style.backgroundColor = '';
+    champTexte.style.color = '';
+    champTexte.style.fontWeight = '';
+    champTexte.style.textAlign = '';
+    champTexte.style.borderColor = '#c7d2fe';
 
-    addNewWord();
-    textToEnter.focus();
+    injecterNouveauMot();
+    champTexte.focus();
 }
 
-if(replayBtn){
-    replayBtn.addEventListener('click', resetGame);
+if (boutonRejouer) {
+    boutonRejouer.addEventListener('click', remettreAZeroPartie);
 }
 
-// Démarrer le jeu
-function startGame() {
-    if(!inputListenerAttached){
-        textToEnter.addEventListener('input', checkInput);
-        inputListenerAttached = true;
+function lancerPartie() {
+    if (!ecouteurSaisieLie) {
+        champTexte.addEventListener('input', surveillerSaisie);
+        ecouteurSaisieLie = true;
     }
-    addNewWord();
-    textToEnter.disabled = false;
-    textToEnter.focus();
+    injecterNouveauMot();
+    champTexte.disabled = false;
+    champTexte.focus();
 }
 
-// Nettoyer au départ
-tabMot.innerHTML = '';
+// vider la zone ou les mots tombent
 
-// Afficher les scores existants
-renderBestScores(loadBestScores());
+pileMots.innerHTML = '';
 
-// Démarrer !
-startGame();
+afficherPalmares(chargerPalmares());
+
+lancerPartie();
