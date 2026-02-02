@@ -27,42 +27,58 @@ const motsCourts = listeMots.filter(mot => mot.length <= 5);
 const motsMoyens = listeMots.filter(mot => mot.length >= 6 && mot.length <= 8);
 const motsLongs = listeMots.filter(mot => mot.length >= 9);
 
+// Récupérer les paramètres de l'URL pour le niveau de difficulté
+
 const parametresUrl = window.location.search.split("?")[1]?.split("=") || ["Facile", "0"];
 const niveauSelectionne = parseInt(parametresUrl[1]) || 0;
 
+// Définir les vitesses de chute et les délais entre les mots selon le niveau
 const vitesseChute = [50, 35, 25];
 const delaiEntreMots = [4000, 3000, 2000];
 
+// Choisir la liste de mots selon le niveau sélectionné
 function choisirListeSelonNiveau() {
-    const selection = niveauSelectionne === 0 ? motsCourts : (niveauSelectionne === 1 ? motsMoyens : motsLongs);
-    return selection.length ? selection : listeMots;
+    let selection;
+
+    if (niveauSelectionne === 0) {
+        selection = motsCourts;
+    } else if (niveauSelectionne === 1) {
+        selection = motsMoyens;
+    } else {
+        selection = motsLongs;
+    }
+    return selection || listeMots;
 }
 
+// Choisir la liste de mots selon le niveau sélectionné
 const badgeNiveau = document.getElementById("badge-niveau");
 const libellesNiveaux = ["Facile", "Moyen", "Difficile"];
-badgeNiveau.innerText = libellesNiveaux[niveauSelectionne] || parametresUrl[0] || "Facile";
+badgeNiveau.innerText = libellesNiveaux[niveauSelectionne] || "Facile";
 
 let pointsActuels = 0;
-let viesRestantes = 3;
+let viesRestantes = 4;
 let motsAffiches = [];
 let temporisateurNouveauMot;
 let compteurMots = 0;
+
 let ecouteurSaisieLie = false;
+
 const SYMBOLE_COEUR = "\u2764\uFE0F";
 
 const zoneChute = document.getElementById("zone-chute");
 const pileMots = document.getElementById("pile-mots");
 const champTexte = document.getElementById("champ-texte");
 const indicateurScore = document.getElementById("compteur-score");
-
 const conteneurPalmares = document.getElementById("palmares");
 
 const CLE_PALMARES = "palmaresClavierMaison";
 
+// afficher le nombre de vies restantes
 const afficheurVies = document.createElement('p');
 afficheurVies.id = 'badge-vies';
 afficheurVies.innerText = `${SYMBOLE_COEUR} Vies: ${viesRestantes}`;
 document.querySelector('.infos-partie').appendChild(afficheurVies);
+
 const boutonRejouer = document.getElementById("bouton-rejouer");
 
 //recuperer l'historique des scores depuis le localStorage
@@ -78,8 +94,6 @@ function chargerPalmares() {
 
 // afficher l'historique des scores 
 function afficherPalmares(liste) {
-    if (!conteneurPalmares) return;
-
     if (!liste.length) {
         conteneurPalmares.innerHTML = `
             <div class="entete-palmares">
@@ -92,8 +106,7 @@ function afficherPalmares(liste) {
 
     const items = liste.map((entree, index) => {
         const date = new Date(entree.date).toLocaleDateString('fr-FR');
-        return `
-            <li class="item-palmares">
+        return `            <li class="item-palmares">
                 <strong>${index + 1}. ${entree.score} pts</strong>
                 <span>${entree.niveau} · ${date}</span>
             </li>
@@ -111,6 +124,7 @@ function afficherPalmares(liste) {
     `;
 }
 
+// enregistrer l'historique des scores dans le localStorage
 function enregistrerPalmares(liste) {
     try {
         localStorage.setItem(CLE_PALMARES, JSON.stringify(liste));
@@ -140,7 +154,7 @@ function genererPositionHorizontale() {
     return Math.floor(Math.random() * (maxPercent - minPercent) + minPercent);
 }
 
-function creerBulleMot(texte, id) {
+function creerMot(texte, id) {
     const blocMot = document.createElement('div');
     blocMot.className = 'falling-word';
     blocMot.textContent = texte;
@@ -170,6 +184,8 @@ function declencherChute(mot) {
     }, vitesseChute[niveauSelectionne]);
 }
 
+// gérer le cas ou un mot atteint le bas de la zone de chute
+
 function motManque(mot) {
     mot.element.classList.add('missed');
     interrompreChute(mot);
@@ -186,6 +202,8 @@ function motManque(mot) {
     }, 500);
 }
 
+// gérer le cas ou un mot est correctement saisi
+
 function motAttrape(mot) {
     interrompreChute(mot);
     mot.element.style.transition = 'all 0.3s ease';
@@ -200,12 +218,15 @@ function motAttrape(mot) {
     }, 300);
 }
 
+// arrêter la chute d'un mot
 function interrompreChute(mot) {
     if (mot.intervalle) {
         clearInterval(mot.intervalle);
         mot.intervalle = null;
     }
 }
+
+// retirer un mot de l'affichage et de la liste des mots actifs
 
 function retirerMot(mot) {
     if (mot.element && mot.element.parentNode) {
@@ -215,20 +236,22 @@ function retirerMot(mot) {
     mettreEnAvantMotActif();
 }
 
+// rendu visuel du mot actif
+
 function mettreEnAvantMotActif() {
     motsAffiches.forEach(item => item.element.classList.remove('active'));
-
-    if (motsAffiches.length > 0) {
-        motsAffiches[0].element.classList.add('active');
-    }
+    motsAffiches[0].element.classList.add('active');
 }
+
+
+// injecter un nouveau mot dans la zone de chute et planifier le suivant
 
 function injecterNouveauMot() {
     if (viesRestantes <= 0) return;
 
     const listeSelonNiveau = choisirListeSelonNiveau();
     const motChoisi = listeSelonNiveau[Math.floor(Math.random() * listeSelonNiveau.length)];
-    const nouveauMot = creerBulleMot(motChoisi, compteurMots++);
+    const nouveauMot = creerMot(motChoisi, compteurMots++);
     motsAffiches.push(nouveauMot);
     declencherChute(nouveauMot);
 
@@ -278,9 +301,7 @@ function surveillerSaisie() {
 
     if (motIdentique) {
         champTexte.classList.add('correct');
-        setTimeout(() => {
-            champTexte.classList.remove('correct');
-        }, 200);
+        setTimeout(() => {champTexte.classList.remove('correct');}, 200);
 
         motAttrape(motIdentique);
         champTexte.value = '';
@@ -340,9 +361,8 @@ function remettreAZeroPartie() {
     champTexte.focus();
 }
 
-if (boutonRejouer) {
-    boutonRejouer.addEventListener('click', remettreAZeroPartie);
-}
+boutonRejouer.addEventListener('click', remettreAZeroPartie);
+
 
 function lancerPartie() {
     if (!ecouteurSaisieLie) {
